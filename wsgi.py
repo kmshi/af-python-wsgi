@@ -16,7 +16,7 @@ import random
 import json
 import urllib2
 
-from bottle import route, run, debug, template, request, validate, static_file, error
+from bottle import route, run, debug, template, request, validate, static_file, error,redirect
 
 #will default to follow_redirects
 def fetch(url, payload=None):
@@ -31,39 +31,30 @@ class YoukuVideoID2DownloadUrl:
             jsonobj = json.loads(resp.read())
             
             seed = jsonobj['data'][0]['seed']
-            key1 = jsonobj['data'][0]['key1']
-            key2 = jsonobj['data'][0]['key2']
-            #title = jsonobj['data'][0]['title']
-            streamfileids = jsonobj['data'][0]['streamfileids']['flv']
-            #flv_segs = jsonobj['data'][0]['segs']['flv']
-            streamtype = jsonobj['data'][0]['streamtypes'][0]
-            if streamtype == 'flvhd':
+            streamtype = ''
+            key = ''
+            streamfileids = ''
+            if jsonobj['data'][0]['segs']['mp4']:
+                streamtype = 'mp4'
+                key = jsonobj['data'][0]['segs']['mp4'][0]['k'] #only get the first segment
+                streamfileids = jsonobj['data'][0]['streamfileids']['mp4']
+            elif jsonobj['data'][0]['segs']['flv']:
                 streamtype = 'flv'
+                key = jsonobj['data'][0]['segs']['flv'][0]['k'] #only get the first segment
+                streamfileids = jsonobj['data'][0]['streamfileids']['flv']
+            else:
+                streamtype = 'flvhd'
+                key = jsonobj['data'][0]['segs']['flvhd'][0]['k'] #only get the first segment
+                streamfileids = jsonobj['data'][0]['streamfileids']['flvhd']
+                
+            #title = jsonobj['data'][0]['title']
 
-            sid = self.get_sid()
-            print('key1:'+ key1 + '  key2:'+key2)
             file_id = self.get_file_id(streamfileids, seed)
-            key = self.gen_key(key1, key2)
-            print('key:'+ key)
-            url = "http://f.youku.com/player/getFlvPath/sid/%s/st/%s/fileid/%s?K=%s&myp=null" % (sid,streamtype,file_id,key)
+            temp = file_id[0:8]+"00"+file_id[10:] #the first segment 16x
+            url = "http://f.youku.com/player/getFlvPath/sid/00_00/st/%s/fileid/%s?K=%s" % (streamtype,temp,key)
             return url
 
 
-    def get_sid(self):
-        import time
-        now = int(time.time())
-        i1 = random.randint(1000,1999)
-        i2 = random.randint(1000,9999)
-        return str(now)+str(i1)+str(i2)
-    
-    def gen_key(self, key1, key2):
-        key = int(key1,16)
-        key ^= 0xA55AA5A5
-        result = key2 + hex(key)[2:]
-        if result.endswith('L'):result = result[0:-1]
-        return result
-
-    
     def get_file_id(self, file_id, seed):
         mixed = self.get_file_id_mix_string(seed)
         #logging.info('fileid:'+ file_id)
@@ -72,7 +63,6 @@ class YoukuVideoID2DownloadUrl:
         real_id = ""
         for myid in ids:
             if myid:
-                print(myid)
                 real_id += mixed[int(myid)]
         return real_id
     
@@ -90,11 +80,15 @@ class YoukuVideoID2DownloadUrl:
         return mixed
 
 
-@route('/hello/:name')
-def index(name='World'):
-    youku = YoukuVideoID2DownloadUrl()
-    print(youku.get("XMjU3MzIxOTk2"));
-    return template('<b>Hello {{name}}</b>!', name=name)
+@route('/download/:name')
+def download(name='XMjU3MzIxOTk2'): #name to be videoid, like XMjU3MzIxOTk2
+    youku = YoukuVideoID2DownloadUrl()    
+    return template('<a href="{{name}}">Download</a>', name=youku.get(name))
+
+@route('/redirect/:name')
+def convert(name='XMjU3MzIxOTk2'): #name to be videoid, like XMjU3MzIxOTk2
+    youku = YoukuVideoID2DownloadUrl()    
+    redirect(youku.get(name))
 
 @error(403)
 def mistake403(code):
