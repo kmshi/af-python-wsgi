@@ -82,11 +82,15 @@ class YoukuVideoID2DownloadUrl:
 
 @route('/download/:name')
 def download(name='XMjU3MzIxOTk2'): #name to be videoid, like XMjU3MzIxOTk2
+    if name.endswith(('.mp4','.flv')):
+        name = name[0:-4]
     youku = YoukuVideoID2DownloadUrl()    
     return template('<a href="{{name}}">Download</a>', name=youku.get(name))
 
 @route('/redirect/:name')
 def convert(name='XMjU3MzIxOTk2'): #name to be videoid, like XMjU3MzIxOTk2
+    if name.endswith(('.mp4','.flv')):
+        name = name[0:-4]
     youku = YoukuVideoID2DownloadUrl()    
     redirect(youku.get(name))
 
